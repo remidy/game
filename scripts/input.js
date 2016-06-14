@@ -1,19 +1,21 @@
 MY.Input = function () {};
 
 MY.Input.prototype.init = function (canvas) {
-	var that = this;
-	
-	canvas.addEventListener("mousedown", function (event) {
-		MY.Mediator.publish("mousedown", that.getEvent(event));
-	});
-	
-	canvas.addEventListener("mousemove", function (event) {
-		MY.Mediator.publish("mousemove", that.getEvent(event));
-	});
-	
-	canvas.addEventListener("mouseup", function (event) {
-		MY.Mediator.publish("mouseup", that.getEvent(event));
-	});
+	canvas.addEventListener("mousedown", this.handleMouseDownEvent.bind(this));
+	canvas.addEventListener("mousemove", this.handleMouseMoveEvent.bind(this));
+	canvas.addEventListener("mouseup", this.handleMouseUpEvent.bind(this));
+};
+
+MY.Input.prototype.handleMouseDownEvent = function (event) {
+	MY.PubSub.publish("mousedown", this.getEvent(event));
+};
+
+MY.Input.prototype.handleMouseMoveEvent = function (event) {
+	MY.PubSub.publish("mousemove", this.getEvent(event));
+};
+
+MY.Input.prototype.handleMouseUpEvent = function (event) {
+	MY.PubSub.publish("mouseup", this.getEvent(event));
 };
 
 MY.Input.prototype.getEvent = function (event) {

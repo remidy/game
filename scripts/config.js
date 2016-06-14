@@ -1,11 +1,49 @@
 MY.Config = {
-	buildings: {
+	objectTypes: {
+		"CashBuilding": {
+			class: MY.CashBuilding,
+			color: "rgb(0, 0, 255)",
+			cost: 2000,
+			grid: [
+				[1, 1, 1],
+				[0, 2, 0],
+				[0, 3, 0]
+			],
+			height: 64,
+			id: "CashBuilding",
+			name: "Cash Building",
+			require: ["WorkerBuilding"],
+			width: 96
+		},
+		"SoldierBuilding": {
+			class: MY.SoldierBuilding,
+			color: "rgb(0, 0, 255)",
+			cost: 1000,
+			grid: [
+				[1, 1, 1],
+				[1, 1, 1],
+				[1, 2, 1],
+				[0, 3, 0]
+			],
+			height: 96,
+			id: "SoldierBuilding",
+			name: "Soldier Building",
+			require: ["WorkerBuilding", "CashBuilding"],
+			width: 96
+		},
+		"SoldierUnit": {
+			building: MY.SoldierBuilding,
+			class: MY.SoldierUnit,
+			color: "rgb(0, 0, 255)",
+			cost: 200,
+			id: "SoldierUnit",
+			name: "Soldier Unit",
+			require: ["SoldierBuilding"]
+		},
 		"WorkerBuilding": {
-			id: "WorkerBuilding",
-			require: [],
-			name: "Worker Building",
-			width: 160,
-			height: 160,
+			class: MY.WorkerBuilding,
+			color: "rgb(0, 0, 255)",
+			cost: 4000,
 			grid: [
 				[1, 1, 1, 1, 1],
 				[1, 1, 1, 1, 1],
@@ -14,55 +52,20 @@ MY.Config = {
 				[1, 1, 2, 1, 1],
 				[0, 0, 3, 0, 0]
 			],
-			cost: 4000,
-			color: "rgb(0, 0, 255)"
+			height: 160,
+			id: "WorkerBuilding",
+			name: "Worker Building",
+			require: [],
+			width: 160
 		},
-		"SoldierBuilding": {
-			id: "SoldierBuilding",
-			require: [MY.WorkerBuilding],
-			name: "Soldier Building",
-			width: 96,
-			height: 96,
-			grid: [
-				[1, 1, 1],
-				[1, 1, 1],
-				[1, 2, 1],
-				[0, 3, 0]
-			],
-			cost: 1000,
-			color: "rgb(0, 0, 255)"
-		},
-		"CashBuilding": {
-			id: "CashBuilding",
-			require: [MY.WorkerBuilding],
-			name: "Cash Building",
-			width: 96,
-			height: 64,
-			grid: [
-				[1, 1, 1],
-				[0, 2, 0],
-				[0, 3, 0]
-			],
-			cost: 2000,
-			color: "rgb(0, 0, 255)"
-		}
-	},
-	units: {
 		"WorkerUnit": {
-			id: "WorkerUnit",
-			require: [MY.WorkerBuilding],
-			name: "Worker Unit",
+			building: MY.WorkerBuilding,
+			class: MY.WorkerUnit,
+			color: "rgb(0, 0, 255)",
 			cost: 100,
-			color: "rgb(0, 0, 255)",
-			building: MY.WorkerBuilding
-		},
-		"SoldierUnit": {
-			id: "SoldierUnit",
-			require: [MY.SoldierBuilding],
-			name: "Soldier Unit",
-			cost: 200,
-			color: "rgb(0, 0, 255)",
-			building: MY.SoldierBuilding
+			id: "WorkerUnit",
+			name: "Worker Unit",
+			require: ["WorkerBuilding"]
 		}
 	}
 };

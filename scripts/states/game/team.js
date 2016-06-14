@@ -5,9 +5,6 @@ MY.Team.prototype.init = function (id, cash, color, selectedColor) {
 	this.cash = cash;
 	this.color = color;
 	this.selectedColor = selectedColor;
-	
-	this.buildings = {};
-	this.units = {};
 };
 
 MY.Team.prototype.addCash = function (cash) {

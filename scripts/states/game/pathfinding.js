@@ -32,18 +32,16 @@ MY.Pathfinding = {
 	},
 	
 	successors: function (find, x, y, grid, rows, cols) {
-		var
-			N = y - 1,
-			S = y + 1,
-			E = x + 1,
-			W = x - 1,
-			$N = N > -1 && !grid[N][x],
-			$S = S < rows && !grid[S][x],
-			$E = E < cols && !grid[y][E],
-			$W = W > -1 && !grid[y][W],
-			result = [],
-			i = 0
-		;
+		var N = y - 1;
+		var S = y + 1;
+		var E = x + 1;
+		var W = x - 1;
+		var $N = N > -1 && !grid[N][x];
+		var $S = S < rows && !grid[S][x];
+		var $E = E < cols && !grid[y][E];
+		var $W = W > -1 && !grid[y][W];
+		var result = [];
+		var i = 0;
 		$N && (result[i++] = {x:x, y:N});
 		$E && (result[i++] = {x:E, y:y});
 		$S && (result[i++] = {x:x, y:S});
@@ -56,10 +54,8 @@ MY.Pathfinding = {
 	},
 	
 	euclidean: function (start, end, f1, f2) {
-		var
-			x = start.x - end.x,
-			y = start.y - end.y
-		;
+		var x = start.x - end.x;
+		var y = start.y - end.y;
 		return f2(x * x + y * y);
 	},
 	
@@ -68,37 +64,49 @@ MY.Pathfinding = {
 	},
 	
 	getPath: function (grid, start, end, f) {
-		var
-			cols = grid[0].length,
-			rows = grid.length,
-			limit = cols * rows,
-			f1 = Math.abs,
-			f2 = Math.max,
-			list = {},
-			result = [],
-			open = [{x:start[0], y:start[1], f:0, g:0, v:start[0]+start[1]*cols}],
-			length = 1,
-			adj, distance, find, i, j, max, min, current, next
-		;
-		end = {x:end[0], y:end[1], v:end[0]+end[1]*cols};
+		var cols = grid[0].length;
+		var rows = grid.length;
+		var limit = cols * rows;
+		var f1 = Math.abs;
+		var f2 = Math.max;
+		var list = {};
+		var result = [];
+		var open = [{x: start[0], y: start[1], f: 0, g: 0, v: start[0] + start[1] * cols}];
+		var length = 1;
+		var adj;
+		var distance;
+		var find;
+		var i;
+		var j;
+		var max;
+		var min;
+		var current;
+		var next;
+		end = {x: end[0], y: end[1], v: end[0] + end[1] * cols};
 		switch (f) {
 			case "Diagonal":
+				distance = this.diagonal;
 				find = this.diagonalSuccessors;
+				break;
 			case "DiagonalFree":
 				distance = this.diagonal;
+				find = this.diagonalSuccessorsFree;
 				break;
 			case "Euclidean":
+				f2 = Math.sqrt;
+				distance = this.euclidean;
 				find = this.diagonalSuccessors;
+				break;
 			case "EuclideanFree":
 				f2 = Math.sqrt;
 				distance = this.euclidean;
+				find = this.diagonalSuccessorsFree;
 				break;
 			default:
 				distance = this.manhattan;
 				find = this.nothingToDo;
 				break;
 		}
-		find || (find = this.diagonalSuccessorsFree);
 		do {
 			max = limit;
 			min = 0;

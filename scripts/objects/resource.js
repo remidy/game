@@ -9,11 +9,13 @@ MY.Resource.prototype.init = function (node, cash) {
 	this.height = 32;
 	
 	node.object = this;
+
+	this.objectId = MY.Objects.add(this);
 };
 
-MY.Resource.prototype.render = function (context, viewport) {
+MY.Resource.prototype.render = function (context, camera) {
 	context.fillStyle = this.cash > 0 ? "rgb(255, 255, 0)" : "rgba(255, 255, 0, 0.5)";
-	context.fillRect(this.x - viewport.x, this.y - viewport.y, this.width, this.height);
+	context.fillRect(this.x - camera.x, this.y - camera.y, this.width, this.height);
 };
 
 MY.Resource.prototype.removeCash = function (cash) {

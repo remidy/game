@@ -1,39 +1,45 @@
-MY.Menu = function () {};
+MY.Commands = function () {};
 
-MY.Menu.prototype.init = function (game, x, y, width, height) {
+MY.Commands.prototype.init = function (game, x, y, width, height) {
 	this.game = game;
 	this.x = x;
 	this.y = y;
 	this.width = width;
 	this.height = height;
+
+	this.commands = [];
 	this.commandWidth = 32;
 	this.commandHeight = 32;
 	this.numberOfCommandsPerRow = 2;
 };
 
-MY.Menu.prototype.render = function (context) {
+MY.Commands.prototype.update = function () {
+	this.commands = this.getCommands();
+};
+
+MY.Commands.prototype.render = function (context) {
 	context.fillStyle = "rgb(0, 0, 0)";
 	context.fillRect(this.x, this.y, this.width, this.height);
 	
 	context.fillStyle = "rgb(255, 255, 255)";
 	context.fillText(this.game.player.cash, this.x + 2, this.y + 12);
-	
-	if (this.game.selectedObjects.length === 1) {
-		var commands = this.getCommands();
-		if (commands.length > 0) {
-			var row,
-				i,
-				l,
-				x,
-				y,
-				command,
-				selectedObject = this.game.selectedObjects[0];
+
+	var selectedObjects = this.game.selector.selectedObjects;
+	if (selectedObjects.length === 1) {
+		if (this.commands.length > 0) {
+			var row;
+			var i;
+			var l;
+			var x;
+			var y;
+			var command;
+			var selectedObject = selectedObjects[0];
 			
 			row = 0;
-			for (i = 0, l = commands.length; i < l; i += 1) {
+			for (i = 0, l = this.commands.length; i < l; i += 1) {
 				x = this.x + 2 + (i % 2 * 34);
 				y = this.y + 34 + (row * 34);
-				command = commands[i];
+				command = this.commands[i];
 				
 				context.fillStyle = command.color;
 				context.fillRect(x, y, this.commandWidth, this.commandHeight);
@@ -51,7 +57,7 @@ MY.Menu.prototype.render = function (context) {
 					}
 				}
 				
-				if (!command.buy) {
+				if (!command.canBuy) {
 					context.fillStyle = "rgba(0, 0, 0, 0.5)";
 					context.fillRect(x, y, this.commandWidth, this.commandHeight);
 				}
@@ -63,14 +69,14 @@ MY.Menu.prototype.render = function (context) {
 			
 			if (this.game.mouseX >= this.x) {
 				row = 0;
-				for (i = 0, l = commands.length; i < l; i += 1) {
+				for (i = 0, l = this.commands.length; i < l; i += 1) {
 					if (this.isCommand({clientX: this.game.mouseX, clientY: this.game.mouseY}, i, row)) {
 						x = this.x + 4 + (i % 2 * 34);
 						y = this.y + 46 + (row * 34);
-						command = commands[i];
+						command = this.commands[i];
 						
-						var width = Math.ceil(context.measureText(command.name).width),
-							height = 10;
+						var width = Math.ceil(context.measureText(command.name).width);
+						var height = 10;
 						
 						context.fillStyle = "rgba(0, 0, 0, 0.5)";
 						context.fillRect(this.x - width - 4, this.y + 32, width + 4, height + 4);
@@ -90,12 +96,12 @@ MY.Menu.prototype.render = function (context) {
 	}
 };
 
-MY.Menu.prototype.handleMouseUp = function (event) {
-	if (this.game.selectedObjects.length === 1) {
-		var i,
-			j,
-			l,
-			selectedObject = this.game.selectedObjects[0];
+MY.Commands.prototype.handleMouseUp = function (event) {
+	if (this.game.selector.selectedObjects.length === 1) {
+		var i;
+		var j;
+		var l;
+		var selectedObject = this.game.selector.selectedObjects[0];
 		
 		if (selectedObject instanceof MY.Building && selectedObject.progress === 100) {
 			j = 0;
@@ -103,7 +109,7 @@ MY.Menu.prototype.handleMouseUp = function (event) {
 				if (this.isCommand(event, i, j)) {
 					var unit = selectedObject.units[i];
 					if (event.leftButton) {
-						var cost = MY.Config.units[unit].cost;
+						var cost = MY.Config.objectTypes[unit].cost;
 						if (this.game.player.cash >= cost) {
 							this.game.player.removeCash(cost);
 							selectedObject.addUnit(unit, cost);
@@ -120,10 +126,10 @@ MY.Menu.prototype.handleMouseUp = function (event) {
 		} else if (selectedObject instanceof MY.Unit) {
 			if (selectedObject instanceof MY.WorkerUnit) {
 				j = 0;
-				for (i = 0, l = selectedObject.buildings.length; i < l; i += 1) {
+				for (i = 0, l = this.commands.length; i < l; i += 1) {
 					if (this.isCommand(event, i, j)) {
-						var building = selectedObject.buildings[i];
-						if (this.game.player.cash >= MY.Config.buildings[building].cost) {
+						var building = this.commands[i].id;
+						if (this.commands[i].canBuy) {
 							this.game.building = building;
 							break;
 						}
@@ -137,9 +143,9 @@ MY.Menu.prototype.handleMouseUp = function (event) {
 	}
 };
 
-MY.Menu.prototype.getCommands = function () {
-	if (this.game.selectedObjects.length === 1) {
-		var selectedObject = this.game.selectedObjects[0];
+MY.Commands.prototype.getCommands = function () {
+	if (this.game.selector.selectedObjects.length === 1) {
+		var selectedObject = this.game.selector.selectedObjects[0];
 		if (selectedObject instanceof MY.Building) {
 			return this.getBuildingCommands(selectedObject);
 		} else if (selectedObject instanceof MY.Unit) {
@@ -149,54 +155,62 @@ MY.Menu.prototype.getCommands = function () {
 	return [];
 };
 
-MY.Menu.prototype.getBuildingCommands = function (selectedObject) {
+MY.Commands.prototype.getBuildingCommands = function (selectedObject) {
 	var commands = [];
 	for (var i = 0, l = selectedObject.units.length; i < l; i += 1) {
-		var unit = MY.Config.units[selectedObject.units[i]];
+		var unit = MY.Config.objectTypes[selectedObject.units[i]];
 		commands[i] = {
 			id: unit.id,
 			name: unit.name,
 			cost: unit.cost,
 			color: unit.color,
-			buy: this.game.player.cash >= unit.cost
+			canBuy: selectedObject.progress === 100 && this.game.player.cash >= unit.cost
 		};
 	}
 	return commands;
 };
 
-MY.Menu.prototype.getUnitCommands = function (selectedObject) {
+MY.Commands.prototype.getUnitCommands = function (selectedObject) {
 	var commands = [];
 	if (selectedObject instanceof MY.WorkerUnit) {
 		for (var i = 0, l = selectedObject.buildings.length; i < l; i += 1) {
-			var building = MY.Config.buildings[selectedObject.buildings[i]];
+			var building = MY.Config.objectTypes[selectedObject.buildings[i]];
 			commands[i] = {
+				id: building.id,
 				name: building.name,
 				cost: building.cost,
 				color: building.color,
-				buy: this.game.player.cash >= building.cost
+				canBuy: this.game.player.cash >= building.cost && this.canBuy(building.id)
 			};
 		}
 	}
 	return commands;
 };
 
-MY.Menu.prototype.isCommand = function (event, i, j) {
+MY.Commands.prototype.isCommand = function (event, i, j) {
 	var point = {};
 	point.x = event.clientX;
 	point.y = event.clientY;
 	
-	var box = {};
-	box.x1 = this.x + 2 + (i % 2 * 34);
-	box.y1 = this.y + 34 + (j * 34);
-	box.x2 = box.x1 + this.commandWidth;
-	box.y2 = box.y1 + this.commandHeight;
+	var rect = {};
+	rect.x1 = this.x + 2 + (i % 2 * 34);
+	rect.y1 = this.y + 34 + (j * 34);
+	rect.x2 = rect.x1 + this.commandWidth;
+	rect.y2 = rect.y1 + this.commandHeight;
 	
-	return MY.Util.isPointInBox(point, box);
+	return MY.Util.isPointInRect(point, rect);
 };
 
-MY.Menu.prototype.isInstanceof = function (type) {
-	for (var i = 0, l = this.game.selectedObjects.length; i < l; i += 1) {
-		if (!this.game.selectedObjects[i] instanceof type) {
+MY.Commands.prototype.canBuy = function (building) {
+	for (var i = 0, l = MY.Config.objectTypes[building].require.length; i < l; i += 1) {
+		var canBuy = false;
+		for (var objectId in MY.Objects.objects[this.game.player.id]) {
+			if (MY.Objects.objects[this.game.player.id][objectId].id === MY.Config.objectTypes[building].require[i] && MY.Objects.objects[this.game.player.id][objectId].progress === 100) {
+				canBuy = true;
+				break;
+			}
+		}
+		if (!canBuy) {
 			return false;
 		}
 	}

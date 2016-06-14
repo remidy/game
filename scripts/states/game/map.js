@@ -1,5 +1,3 @@
-MY.require("scripts/maps/map-1.js");
-
 MY.Map = function () {};
 
 MY.Map.prototype.init = function () {
@@ -7,8 +5,8 @@ MY.Map.prototype.init = function () {
 	
 	this.nodeWidth = 32;
 	this.nodeHeight = 32;
-	this.width = this.map.map.length * this.nodeWidth;
-	this.height = this.map.map[0].length * this.nodeHeight;
+	this.width = this.map.nodes.length * this.nodeWidth;
+	this.height = this.map.nodes[0].length * this.nodeHeight;
 	
 	this.initTerrains();
 	this.initNodes();
@@ -29,16 +27,16 @@ MY.Map.prototype.initTerrains = function () {
 };
 
 MY.Map.prototype.initNodes = function () {
-	var i,
-		j,
-		l,
-		m;
+	var i;
+	var j;
+	var l;
+	var m;
 	this.nodes = [];
-	for (i = 0, l = this.map.map.length; i < l; i += 1) {
+	for (i = 0, l = this.map.nodes.length; i < l; i += 1) {
 		this.nodes[i] = [];
-		for (j = 0, m = this.map.map[i].length; j < m; j += 1) {
+		for (j = 0, m = this.map.nodes[i].length; j < m; j += 1) {
 			var node = new MY.Node();
-			node.init(this.terrains[this.map.map[i][j]], i, j, this.nodeWidth, this.nodeHeight);
+			node.init(this.terrains[this.map.nodes[i][j]], i, j, this.nodeWidth, this.nodeHeight);
 			this.nodes[i][j] = node;
 		}
 	}
@@ -51,34 +49,44 @@ MY.Map.prototype.initNodes = function () {
 
 MY.Map.prototype.initResources = function () {
 	this.resources = [];
-	for (var i = 0, l = this.map.resources.length; i < l; i += 1) {
+	for (var id in this.map.resources) {
+		var mapResource = this.map.resources[id];
+
 		var resource = new MY.Resource();
-		resource.init(this.nodes[this.map.resources[i][0]][this.map.resources[i][1]], this.map.resources[i][2]);
-		this.resources[i] = resource;
+		resource.init(this.nodes[mapResource.row][mapResource.col], mapResource.cash);
+
+		this.resources.push(resource);
 	}
 };
 
-MY.Map.prototype.render = function (context, viewport) {
-	var i,
-		l;
-	
-	for (i = viewport.minRow; i < viewport.maxRow; i += 1) {
-		for (var j = viewport.minCol; j < viewport.maxCol; j += 1) {
-			this.nodes[i][j].render(context, viewport);
+MY.Map.prototype.render = function (context, camera) {
+	this.renderNodes(context, camera);
+	this.renderResources(context, camera);
+};
+
+MY.Map.prototype.renderNodes = function (context, camera) {
+	for (var i = camera.minRow; i < camera.maxRow; i += 1) {
+		for (var j = camera.minCol; j < camera.maxCol; j += 1) {
+			this.nodes[i][j].render(context, camera);
 		}
 	}
-	
-	for (i = 0, l = this.resources.length; i < l; i += 1) {
-		this.resources[i].render(context, viewport);
+};
+
+MY.Map.prototype.renderResources = function (context, camera) {
+	for (var i = 0, l = this.resources.length; i < l; i += 1) {
+		this.resources[i].render(context, camera);
 	}
 };
 
 MY.Map.prototype.getNodeByRowCol = function (row, col) {
 	if (row !== undefined && col !== undefined && row >= 0 && row < this.nodes.length && col >= 0 && col < this.nodes[row].length) {
 		return this.nodes[row][col];
-	} else {
-		return null;
 	}
+	return null;
+};
+
+MY.Map.prototype.getNodeByXY = function (x, y) {
+	return this.nodes[Math.floor(y / this.nodeWidth)][Math.floor(x / this.nodeHeight)];
 };
 
 MY.Map.prototype.getGrid = function () {

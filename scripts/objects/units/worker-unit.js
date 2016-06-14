@@ -4,9 +4,12 @@ MY.WorkerUnit = function () {
 
 MY.WorkerUnit.prototype = Object.create(MY.Unit.prototype);
 
-MY.WorkerUnit.prototype.init = function (team, node, map) {
-	MY.Unit.prototype.init.call(this, team, node, map);
-	
+MY.WorkerUnit.prototype.init = function (map, config, levelObjectId) {
+	config.type = "WorkerUnit";
+	MY.Unit.prototype.init.call(this, map, config, levelObjectId);
+
+	this.range = 320;
+
 	this.lastBuildTime = Date.now();
 	
 	this.buildingObject = null;
@@ -22,21 +25,31 @@ MY.WorkerUnit.prototype.init = function (team, node, map) {
 	this.cashBuildingObject = null;
 	this.cashBuildingNode = null;
 	
-	this.buildings = ["SoldierBuilding", "CashBuilding"];
+	this.buildings = ["CashBuilding", "SoldierBuilding"];
 };
 
 MY.WorkerUnit.prototype.update = function (deltaTime) {
+	this.isBusy = false;
+
 	if (this.buildingObject !== null) {
-		this.doBuild();
+		if (!this.isMoving) {
+			this.doBuild();
+
+			this.isBusy = true;
+		}
 	} else if (this.resourceObject !== null) {
-		this.doCash();
+		if (!this.isMoving) {
+			this.doCash();
+
+			this.isBusy = true;
+		}
 	}
 	
 	MY.Unit.prototype.update.call(this, deltaTime);
 };
 
 MY.WorkerUnit.prototype.doBuild = function () {
-	if (this.node === this.buildingNode) {
+	if (this.buildingNode !== null && this.x === this.buildingNode.x && this.y === this.buildingNode.y) {
 		var now = Date.now();
 		if (now - this.lastBuildTime > 100) {
 			var progress = 1;
@@ -57,7 +70,7 @@ MY.WorkerUnit.prototype.doBuild = function () {
 
 MY.WorkerUnit.prototype.doCash = function () {
 	if (this.cash === 100 || this.resourceObject.cash === 0) {
-		if (this.node === this.cashBuildingNode) {
+		if (this.cashBuildingNode !== null && this.x === this.cashBuildingNode.x && this.y === this.cashBuildingNode.y) {
 			this.cashBuildingObject.addCash(this.cash);
 			this.cash = 0;
 			this.moveTo(this.resourceNode.row, this.resourceNode.col);
@@ -67,13 +80,7 @@ MY.WorkerUnit.prototype.doCash = function () {
 			}
 		} else {
 			this.isCashing = false;
-			var cashBuildings = [];
-			for (var id in MY.ObjectManager.objects[this.team.id]) {
-				var object = MY.ObjectManager.objects[this.team.id][id];
-				if (object instanceof MY.CashBuilding && object.progress === 100) {
-					cashBuildings.push(object);
-				}
-			}
+			var cashBuildings = this.getCashBuildings();
 			if (cashBuildings.length > 0) {
 				this.cashBuildingObject = cashBuildings[0];
 				this.cashBuildingNode = this.cashBuildingObject.moveToUnitNode;
@@ -81,7 +88,7 @@ MY.WorkerUnit.prototype.doCash = function () {
 			}
 		}
 	} else {
-		if (this.node === this.resourceNode) {
+		if (this.resourceNode !== null && this.x === this.resourceNode.x && this.y === this.resourceNode.y) {
 			this.isCashing = true;
 		}
 		if (this.isCashing) {
@@ -100,4 +107,15 @@ MY.WorkerUnit.prototype.doCash = function () {
 			this.moveTo(this.resourceNode.row, this.resourceNode.col);
 		}
 	}
+};
+
+MY.WorkerUnit.prototype.getCashBuildings = function () {
+	var cashBuildings = [];
+	for (var id in MY.Objects.objects[this.team.id]) {
+		var object = MY.Objects.objects[this.team.id][id];
+		if (object instanceof MY.CashBuilding && object.progress === 100) {
+			cashBuildings.push(object);
+		}
+	}
+	return cashBuildings;
 };

@@ -13,7 +13,7 @@ MY.Bullet.prototype.init = function (fromObject, toObject, damage) {
 	this.health = 1;
 	this.team = fromObject.team;
 	
-	this.objectId = MY.ObjectManager.add(this);
+	this.objectId = MY.Objects.add(this);
 };
 
 MY.Bullet.prototype.update = function (deltaTime) {
@@ -22,13 +22,13 @@ MY.Bullet.prototype.update = function (deltaTime) {
 	this.x += Math.round(Math.cos(this.angle) * speed);
 	this.y += Math.round(Math.sin(this.angle) * speed);
 	
-	if (MY.Util.boxCollides(MY.Util.getObjectBox(this), MY.Util.getObjectBox(this.toObject))) {
+	if (MY.Util.isRectInRect(MY.Util.getObjectRect(this), MY.Util.getObjectRect(this.toObject))) {
 		this.toObject.removeHealth(this.damage);
 		this.health = 0;
 	}
 };
 
-MY.Bullet.prototype.render = function (context, viewport) {
+MY.Bullet.prototype.render = function (context, camera) {
 	context.fillStyle = "rgb(0, 0, 0)";
-	context.fillRect(this.x - viewport.x, this.y - viewport.y, this.width, this.height);
+	context.fillRect(this.x - camera.x, this.y - camera.y, this.width, this.height);
 };

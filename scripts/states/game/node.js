@@ -18,9 +18,9 @@ MY.Node.prototype.update = function (map) {
 	this.w = map.getNodeByRowCol(this.row, this.col - 1);
 };
 
-MY.Node.prototype.render = function (context, viewport) {
+MY.Node.prototype.render = function (context, camera) {
 	context.fillStyle = this.terrain.color;
-	context.fillRect(this.x - viewport.x, this.y - viewport.y, this.width, this.height);
+	context.fillRect(this.x - camera.x, this.y - camera.y, this.width, this.height);
 };
 
 MY.Node.prototype.getCost = function () {
